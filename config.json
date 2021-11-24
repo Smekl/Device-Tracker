@@ -6,7 +6,22 @@
     "arch": ["amd64", "armv7"],
     "startup": "application",
     "boot": "auto",
-    "options": {},
-    "schema": {},
-    "host_network": true
+    "options": {
+        "nodered": {
+            "ip": "localhost",
+            "port", 1880,
+            "username": "USER",
+            "password": "PASSWORD"
+        }
+    },
+    "schema": {
+        "nodered": {
+            "ip": "str",
+            "port": "int",
+            "username": "str",
+            "password": "str"
+        }
+    },
+    "host_network": true,
+    "ingress": true,
 }

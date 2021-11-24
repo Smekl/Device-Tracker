@@ -1,6 +1,6 @@
 #!/bin/sh
 
-FILEPATH=`python -c "import scapy,os; print(os.path.join(scapy.__path__[0], 'libs/winpcapy.py'))"`
+FILEPATH=`python3 -c "import scapy,os; print(os.path.join(scapy.__path__[0], 'libs/winpcapy.py'))"`
 
 if [ -f "/.dockerenv" ]; then
     echo Fixing scapy bug $FILEPATH

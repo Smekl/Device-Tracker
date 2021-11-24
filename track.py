@@ -22,6 +22,7 @@ class Tracker(object):
         self.filter = 'udp dst port 67 and ip src 0.0.0.0'
 
     def track(self):
+        logging.info("Running...")
         sniff(filter=self.filter, prn=self.handle_packet)
 
     def handle_packet(self, pkt):
