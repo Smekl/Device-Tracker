@@ -9,7 +9,7 @@
     "options": {
         "nodered": {
             "ip": "localhost",
-            "port", 1880,
+            "port": 1880,
             "username": "USER",
             "password": "PASSWORD"
         }
@@ -23,5 +23,5 @@
         }
     },
     "host_network": true,
-    "ingress": true,
+    "ingress": true
 }
