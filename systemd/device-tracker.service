@@ -1,0 +1,14 @@
+[Unit]
+Description=Device Tracker
+Requires=hassio-supervisor.service
+After=hassio-supervisor.service
+
+[Service]
+WorkingDirectory=<DEVICE_TRACKER_ROOT_FOLDER>
+Type=simple
+RemainAfterExit=yes
+User=<USERNAME>
+ExecStart=<DEVICE_TRACKER_ROOT_FOLDER>/track.py
+
+[Install]
+WantedBy=multi-user.target
