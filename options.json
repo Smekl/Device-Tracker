@@ -1,0 +1,8 @@
+{
+    "nodered": {
+        "ip": "localhost",
+        "port": 1880,
+        "username": "USER",
+        "password": "PASSWORD"
+    }
+}
