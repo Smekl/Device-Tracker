@@ -10,8 +10,8 @@ RUN apk add py-pip
 RUN mkdir /device_tracker
 WORKDIR /device_tracker
 
-RUN wget https://github.com/Smekl/Device-Tracker/archive/refs/tags/0.2.tar.gz
-RUN tar xzf 0.2.tar.gz --strip-components=1
+RUN wget https://github.com/Smekl/Device-Tracker/archive/refs/tags/0.4.tar.gz
+RUN tar xzf 0.4.tar.gz --strip-components=1
 RUN apk add libpcap
 RUN pip install scapy requests
 RUN chmod +x hotfixes/scapy.sh && ./hotfixes/scapy.sh
