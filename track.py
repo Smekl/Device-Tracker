@@ -36,7 +36,7 @@ class Tracker(object):
         session.auth = (self.username, self.password)
 
         url = f'https://{self.ip}:{self.port}/endpoint/arrived'
-        response = session.post(url, verify='/ssl', data={'mac': mac})
+        response = session.post(url, verify=False, data={'mac': mac})
         logging.info(response.text)
 
 def load_config(config_path):
@@ -45,6 +45,10 @@ def load_config(config_path):
     config = json.loads(config_file.read())
     config_file.close()
     return config
+
+def setup_logging():
+    logging.basicConfig(format='[$(asctime)s] - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+    logging.getLogger().setLevel(logging.INFO)
 
 def get_args():
 
@@ -63,7 +67,7 @@ def main():
     args = get_args()
 
     # set logging level
-    logging.getLogger().setLevel(logging.INFO)
+    setup_logging()
 
     # parse config
     config = load_config(args.config)
