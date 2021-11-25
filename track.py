@@ -9,6 +9,9 @@ import os
 import argparse
 import logging
 
+import urllib3
+urllib3.disable_warnings()
+
 class Tracker(object):
 
     MTU = 1500
