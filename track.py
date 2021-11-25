@@ -36,7 +36,7 @@ class Tracker(object):
         session.auth = (self.username, self.password)
 
         url = f'https://{self.ip}:{self.port}/endpoint/arrived'
-        response = session.post(url, verify=False, data={'mac': mac})
+        response = session.post(url, verify='/ssl', data={'mac': mac})
         logging.info(response.text)
 
 def load_config(config_path):

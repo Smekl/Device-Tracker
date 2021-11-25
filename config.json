@@ -23,5 +23,6 @@
         }
     },
     "host_network": true,
-    "ingress": true
+    "ingress": true,
+    "map": ["ssl:ro"]
 }
