@@ -1,9 +1,9 @@
 {
     "name": "Device Tracker",
-    "version": "0.5",
+    "version": "0.6",
     "slug": "device_tracker",
     "description": "Track when devices connect to your network and get notifications",
-    "arch": ["amd64", "armv7"],
+    "arch": ["amd64", "armv7", "armhf", "i386", "aarch64"],
     "startup": "application",
     "boot": "auto",
     "options": {
