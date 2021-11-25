@@ -2,7 +2,8 @@
 
 ARCH=`dpkg --print-architecture`
 DOCKER_NAME=haservices/$ARCH-device-tracker:1.0
-BUILD_FROM=ghcr.io/hassio-addons/base/$ARCH:10.2.3
+#BUILD_FROM=ghcr.io/hassio-addons/base/$ARCH:10.2.3
+BUILD_FROM=homeassistant/$ARCH-base:3.12
 
 cd ../
 
