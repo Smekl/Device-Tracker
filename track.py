@@ -17,8 +17,7 @@ class Tracker(object):
         self.config = config
         self.username = self.config['nodered']['username']
         self.password = self.config['nodered']['password']
-        self.ip = self.config['nodered']['ip']
-        self.port = self.config['nodered']['port']
+        self.url = self.config['nodered']['url']
         self.filter = 'udp dst port 67 and ip src 0.0.0.0'
 
     def track(self):
@@ -35,7 +34,7 @@ class Tracker(object):
         session = requests.Session()
         session.auth = (self.username, self.password)
 
-        url = f'https://{self.ip}:{self.port}/endpoint/arrived'
+        url = f'{self.url}'
         response = session.post(url, verify=False, data={'mac': mac})
         logging.info(response.text)
 
