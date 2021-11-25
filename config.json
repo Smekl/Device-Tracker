@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 {
     "name": "Device Tracker",
     "version": "0.5",
@@ -26,3 +27,32 @@
     "ingress": true,
     "map": ["ssl:ro"]
 }
+=======
+{
+    "name": "Device Tracker",
+    "version": "0.6",
+    "slug": "device_tracker",
+    "description": "Track when devices connect to your network and get notifications",
+    "arch": ["amd64", "armv7", "armhf", "i386", "aarch64"],
+    "startup": "application",
+    "boot": "auto",
+    "options": {
+        "nodered": {
+            "ip": "localhost",
+            "port": 1880,
+            "username": "USER",
+            "password": "PASSWORD"
+        }
+    },
+    "schema": {
+        "nodered": {
+            "ip": "str",
+            "port": "int",
+            "username": "str",
+            "password": "str"
+        }
+    },
+    "host_network": true,
+    "ingress": true
+}
+>>>>>>> origin
