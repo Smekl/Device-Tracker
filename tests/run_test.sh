@@ -17,4 +17,4 @@ if [[ $? -ne 0 ]]; then
     exit $?
 fi
 
-sudo docker run --network host -v /tmp/data:/data -t -i $DOCKER_NAME /bin/bash
+sudo docker run --network host -v /tmp/data:/data -t -i $DOCKER_NAME sh
