@@ -47,7 +47,7 @@ def load_config(config_path):
     return config
 
 def setup_logging():
-    logging.basicConfig(format='[$(asctime)s] - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+    logging.basicConfig(format='[%(asctime)s] - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
     logging.getLogger().setLevel(logging.INFO)
 
 def get_args():
