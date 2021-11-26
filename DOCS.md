@@ -13,5 +13,5 @@ A little bit of configuration is required - <br>
 1. `url` - specify the full url to send notifications to - i.e `https://localhost:1880`
 2. `username` - username for nodered web ui
 2. `password` - password for nodered web ui
-<br>
-if your nodered has no username or password - **leave this field black**<br>
+
+if your nodered has no username or password - **leave this field black** <br>

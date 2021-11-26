@@ -23,7 +23,7 @@ class Tracker(object):
         self.username = self.config['nodered']['username']
         self.password = self.config['nodered']['password']
         self.url = self.config['nodered']['url']
-        self.filter = 'udp dst port 67'
+        self.filter = 'udp dst port 67 and udp[282:3] = 0x350101'
         self.cache = dict()
 
     def track(self):
