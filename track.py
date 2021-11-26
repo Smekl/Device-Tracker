@@ -2,6 +2,7 @@
 
 from scapy.all import *
 import requests
+import socket
 import json
 import sys
 import os
@@ -22,6 +23,14 @@ class Tracker(object):
         self.password = self.config['nodered']['password']
         self.url = self.config['nodered']['url']
         self.filter = 'udp dst port 67 and ip src 0.0.0.0'
+
+    def __compile_bpf(self, bpf):
+        return bpf
+
+    def __open_raw_sniffer(self, bpf):
+        compiled_bpf = self.__compile_bpf(bpf)
+        sock = socket.socket(socket.PF_PACKET, socket.SOCK_RAW, socket.htons(socket.ETH_P_ALL))
+        socket.setsockopt(sock, SOL_SOCKET, SO_ATTACH_FILTER, compiled_bpf)
 
     def track(self):
         logging.info("Running...")
