@@ -3,6 +3,7 @@
 from scapy.all import *
 import requests
 import json
+import time
 import sys
 import os
 
@@ -15,21 +16,29 @@ urllib3.disable_warnings()
 class Tracker(object):
 
     MTU = 1500
+    CACHE_INVALID_THRESHOLD = 5 # seconds
 
     def __init__(self, config):
         self.config = config
         self.username = self.config['nodered']['username']
         self.password = self.config['nodered']['password']
         self.url = self.config['nodered']['url']
-        self.filter = 'udp dst port 67 and ip src 0.0.0.0'
+        self.filter = 'udp dst port 67'
+        self.cache = dict()
 
     def track(self):
         logging.info("Running...")
         sniff(filter=self.filter, prn=self.handle_packet)
 
+    def cache_invalid(self, mac):
+        return mac in self.cache and (time.time() - self.cache[mac]) >= Tracker.CACHE_INVALID_THRESHOLD
+
     def handle_packet(self, pkt):
         logging.info(pkt.summary())
-        self.notify(pkt[Ether].src)
+        mac = pkt[Ether].src
+        if self.cache_invalid(mac):
+            self.notify(pkt[Ether].src)
+            self.cache[mac] = time.time()
 
     def notify(self, mac):
 
