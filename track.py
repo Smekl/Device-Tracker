@@ -47,7 +47,7 @@ class Tracker(object):
         session.auth = (self.username, self.password)
 
         url = f'{self.url}'
-        response = session.post(url, verify=False, data={'mac': mac, 'last_seen': self.cache[mac]})
+        response = session.post(url, verify=False, data={'mac': mac, 'last_seen': self.cache.get(mac, 0)})
         logging.info(response.text)
 
 def load_config(config_path):
