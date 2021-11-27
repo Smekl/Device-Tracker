@@ -16,14 +16,14 @@ urllib3.disable_warnings()
 class Tracker(object):
 
     MTU = 1500
-    CACHE_INVALID_THRESHOLD = 5 # seconds
 
     def __init__(self, config):
         self.config = config
         self.username = self.config['nodered']['username']
         self.password = self.config['nodered']['password']
+        self.cache_timeout = self.config['timeout']
         self.url = self.config['nodered']['url']
-        self.filter = 'udp dst port 67 and udp[282:3] = 0x350101'
+        self.filter = 'udp dst port 67 and udp[248:1] = 0x35 and udp[249:1] = 0x1 and udp[250:1] = 0x3' # DHCP Request
         self.cache = dict()
 
     def track(self):
@@ -31,7 +31,7 @@ class Tracker(object):
         sniff(filter=self.filter, prn=self.handle_packet)
 
     def cache_invalid(self, mac):
-        return mac in self.cache and (time.time() - self.cache[mac]) >= Tracker.CACHE_INVALID_THRESHOLD
+        return mac not in self.cache or (time.time() - self.cache[mac]) >= self.cache_timeout
 
     def handle_packet(self, pkt):
         logging.info(pkt.summary())
@@ -47,7 +47,7 @@ class Tracker(object):
         session.auth = (self.username, self.password)
 
         url = f'{self.url}'
-        response = session.post(url, verify=False, data={'mac': mac})
+        response = session.post(url, verify=False, data={'mac': mac, 'last_seen': self.cache[mac]})
         logging.info(response.text)
 
 def load_config(config_path):
