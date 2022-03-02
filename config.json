@@ -21,7 +21,8 @@
             "username": "str",
             "password": "str"
         },
-        "timeout": "int"
+        "timeout": "int",
+        "log_level": "str"
     },
     "host_network": true,
     "ingress": true,

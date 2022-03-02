@@ -23,8 +23,13 @@ class Tracker(object):
         self.password = self.config['nodered']['password']
         self.cache_timeout = self.config['timeout']
         self.url = self.config['nodered']['url']
+        self.log_level = self.config["log_level"]
         self.filter = 'udp dst port 67 and udp[248:1] = 0x35 and udp[249:1] = 0x1 and udp[250:1] = 0x3' # DHCP Request
         self.cache = dict()
+
+        # Set logger level from config
+        # TODO: maybe check if log_level is valid
+        logger.getLogger.setLevel(self.log_level)
 
     def track(self):
         logging.info("Running...")

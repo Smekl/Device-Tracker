@@ -4,5 +4,6 @@
         "username": "USER",
         "password": "PASSWORD"
     },
-    "timeout": 5
+    "timeout": 5,
+    "log_level": "info"
 }
