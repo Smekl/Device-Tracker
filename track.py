@@ -9,7 +9,6 @@ import os
 
 import argparse
 import logging
-logging.getLogger().setLevel(logging.INFO)
 
 import urllib3
 urllib3.disable_warnings()
@@ -86,10 +85,10 @@ def get_args():
 
 def main():
 
-    args = get_args()
-
     # set logging level
     setup_logging()
+
+    args = get_args()
 
     # parse config
     config = load_config(args.config)
