@@ -1,6 +1,6 @@
 {
     "name": "Device Tracker",
-    "version": "0.7.28",
+    "version": "0.7.30",
     "slug": "device_tracker",
     "description": "Track when devices connect to your network and get notifications",
     "url": "https://github.com/Smekl/Device-Tracker",
@@ -8,13 +8,16 @@
     "startup": "application",
     "boot": "auto",
     "options": {
-        "entities": [],
+        "entities": [{
+            "entity": "device_tracker.placeholder",
+            "mac": "aa:bb:cc:11:22:33"
+        }],
         "timeout": 5
     },
     "schema": {
         "entities": [
             {
-                "name": "str",
+                "entity": "str",
                 "mac": "str"
             }
         ],

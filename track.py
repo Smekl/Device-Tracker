@@ -10,9 +10,6 @@ import os
 import argparse
 import logging
 
-import urllib3
-urllib3.disable_warnings()
-
 from websocket_ha import WebSocketHa
 
 
@@ -27,7 +24,6 @@ class Tracker(object):
         logging.info(f"got entities {self.entities}")
 
         self.cache_timeout = self.config['timeout']
-        self.url = self.config['nodered']['url']
         self.filter = 'udp dst port 67 and udp[248:1] = 0x35 and udp[249:1] = 0x1 and udp[250:1] = 0x3' # DHCP Request
         self.cache = dict()
 
