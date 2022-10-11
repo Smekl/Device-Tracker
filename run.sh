@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/with-contenv bashio
 
 echo Starting Device Tracker
 
@@ -10,6 +10,6 @@ else
 fi
 
 echo token start
-echo $HASSIO_TOKEN
+echo $SUPERVISOR_TOKEN
 echo token end
 python3 track.py --config $CONFIG_PATH
