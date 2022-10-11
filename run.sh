@@ -10,6 +10,6 @@ else
 fi
 
 echo token start
-echo $SUPERVISOR_TOKEN
+echo $HASSIO_TOKEN
 echo token end
-python3 track.py --config $CONFIG_PATH --token $SUPERVISOR_TOKEN
+python3 track.py --config $CONFIG_PATH --token $HASSIO_TOKEN
