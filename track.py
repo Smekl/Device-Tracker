@@ -13,15 +13,20 @@ import logging
 import urllib3
 urllib3.disable_warnings()
 
+from websocket_ha import WebSocketHa
+
+
 class Tracker(object):
 
     MTU = 1500
     CACHE_INVALID_THRESHOLD = 5 # seconds
 
-    def __init__(self, config):
+    def __init__(self, config, token):
         self.config = config
+        self.token = token
         self.username = self.config['nodered']['username']
         self.password = self.config['nodered']['password']
+        self.entities = self.config['entities']
         self.url = self.config['nodered']['url']
         self.filter = 'udp dst port 67 and udp[282:3] = 0x350101'
         self.cache = dict()
@@ -65,6 +70,7 @@ def get_args():
 
     parser = argparse.ArgumentParser(description='Track devices in the network')
     parser.add_argument('--config', dest='config', action='store', help='path to config file')
+    parser.add_argument('--token', dest='token', action='store', help='token used to communicate with Home Assistant')
 
     args = parser.parse_args()
 
@@ -84,7 +90,8 @@ def main():
     config = load_config(args.config)
 
     # run tracker
-    tracker = Tracker(config)
+    logging.info(f"found token {args.token}")
+    tracker = Tracker(config, args.token)
     tracker.track()
 
 

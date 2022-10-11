@@ -9,4 +9,4 @@ else
     CONFIG_PATH=options.json
 fi
 
-python3 track.py --config $CONFIG_PATH
+python3 track.py --config $CONFIG_PATH --token $SUPERVISOR_TOKEN
