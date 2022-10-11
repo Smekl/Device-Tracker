@@ -23,9 +23,9 @@ class Tracker(object):
     def __init__(self, config, token):
         self.config = config
         self.token = token
-        self.username = self.config['nodered']['username']
-        self.password = self.config['nodered']['password']
         self.entities = self.config['entities']
+        logging.info(f"got entities {self.entities}")
+
         self.cache_timeout = self.config['timeout']
         self.url = self.config['nodered']['url']
         self.filter = 'udp dst port 67 and udp[248:1] = 0x35 and udp[249:1] = 0x1 and udp[250:1] = 0x3' # DHCP Request
@@ -46,14 +46,7 @@ class Tracker(object):
             self.cache[mac] = time.time()
 
     def notify(self, mac):
-
         logging.info(f"Notifying {mac}")
-        session = requests.Session()
-        session.auth = (self.username, self.password)
-
-        url = f'{self.url}'
-        response = session.post(url, verify=False, data={'mac': mac, 'last_seen': self.cache.get(mac, 0)})
-        logging.info(response.text)
 
 def load_config(config_path):
 
