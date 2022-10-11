@@ -12,7 +12,7 @@ WORKDIR /device_tracker
 
 COPY . .
 RUN apk add libpcap
-RUN pip install scapy requests
+RUN pip install scapy requests asyncws
 RUN chmod +x hotfixes/scapy.sh && ./hotfixes/scapy.sh
 RUN chmod +x ./run.sh
 CMD [ "./run.sh" ]
