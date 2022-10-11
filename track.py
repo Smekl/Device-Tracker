@@ -105,5 +105,7 @@ if __name__ == '__main__':
         main()
     except:
         import time
+        import traceback
+        logging.info(traceback.format_exc())
         while True:
             time.sleep(5)
