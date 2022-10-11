@@ -11,14 +11,16 @@
             "url": "https://localhost:1880/endpoint/arrived",
             "username": "USER",
             "password": "PASSWORD"
-        }
+        },
+        "timeout": 5
     },
     "schema": {
         "nodered": {
             "url": "str",
             "username": "str",
             "password": "str"
-        }
+        },
+        "timeout": "int"
     },
     "host_network": true,
     "ingress": true,
