@@ -16,11 +16,11 @@ class WebSocketHa(object):
     async def recv(self):
         data = await self.ws.recv()
         res = json.loads(data)
-        logging.info(res)
+        logging.debug(res)
         return res
 
     async def send(self, data: dict):
-        logging.info(data)
+        logging.debug(data)
         await self.ws.send(json.dumps(data))
 
     async def connect(self):
