@@ -1,6 +1,6 @@
 {
     "name": "Device Tracker",
-    "version": "0.7.24",
+    "version": "0.7.25",
     "slug": "device_tracker",
     "description": "Track when devices connect to your network and get notifications",
     "url": "https://github.com/Smekl/Device-Tracker",
@@ -10,14 +10,14 @@
     "options": {
         "entities": {
             "name": "str",
-            "mac": "str",
+            "mac": "str"
         },
         "timeout": 5
     },
     "schema": {
         "entities": {
             "name": "str",
-            "mac": "str",
+            "mac": "str"
         },
         "timeout": "int"
     },
