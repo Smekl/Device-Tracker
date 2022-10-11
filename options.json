@@ -1,8 +1,7 @@
 {
-    "nodered": {
-        "url": "https://localhost:1880/endpoint/arrived",
-        "username": "USER",
-        "password": "PASSWORD"
+    "entities": {
+        "name": "str",
+        "mac": "str",
     },
     "timeout": 5
 }

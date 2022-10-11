@@ -1,6 +1,6 @@
 {
     "name": "Device Tracker",
-    "version": "0.7.23",
+    "version": "0.7.24",
     "slug": "device_tracker",
     "description": "Track when devices connect to your network and get notifications",
     "url": "https://github.com/Smekl/Device-Tracker",
@@ -8,18 +8,16 @@
     "startup": "application",
     "boot": "auto",
     "options": {
-        "nodered": {
-            "url": "https://localhost:1880/endpoint/arrived",
-            "username": "USER",
-            "password": "PASSWORD"
+        "entities": {
+            "name": "str",
+            "mac": "str",
         },
         "timeout": 5
     },
     "schema": {
-        "nodered": {
-            "url": "str",
-            "username": "str",
-            "password": "str"
+        "entities": {
+            "name": "str",
+            "mac": "str",
         },
         "timeout": "int"
     },
