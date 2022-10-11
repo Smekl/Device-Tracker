@@ -23,6 +23,8 @@ class Tracker(object):
         self.token = token
         self.entities = self.config['entities']
         self.ws = WebSocketHa('ws://127.0.0.1:8123/api/websocket')
+        asyncio.get_event_loop.run_until_complete(self.ws.connect())
+        asyncio.get_event_loop.run_until_complete(self.ws.auth(token))
         logging.info(f"got entities {self.entities}")
 
         self.cache_timeout = self.config['timeout']
