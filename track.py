@@ -78,7 +78,7 @@ def get_args():
         parser.error("Must specify path to config file")
 
     if args.token is None:
-        logging.info(f'found token {os.environ['SUPERVISOR_TOKEN']}')
+        logging.info(f'found token {os.environ["SUPERVISOR_TOKEN"]}')
         args.token = os.environ['SUPERVISOR_TOKEN']
 
     return args
