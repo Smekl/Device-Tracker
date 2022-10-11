@@ -87,6 +87,7 @@ def main():
 
     # set logging level
     setup_logging()
+    logging.info("running now")
 
     args = get_args()
 

@@ -12,4 +12,4 @@ fi
 echo token start
 echo $HASSIO_TOKEN
 echo token end
-python3 track.py --config $CONFIG_PATH --token $HASSIO_TOKEN
+python3 track.py --config $CONFIG_PATH
