@@ -70,11 +70,10 @@ class WebSocketHa(object):
 
 
 async def test():
-    ws = WebSocketHa('ws://url/api/websocket')
+    ws = WebSocketHa('ws://supervisor/core/websocket')
     await ws.connect()
     await ws.auth("")
     await ws.call_service('light', 'turn_on', target='light.living_room')
-    await ws.call_service('light', 'turn_off', target='light.living_room')
     await ws.close()
 
 if __name__ == '__main__':

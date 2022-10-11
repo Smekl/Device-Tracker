@@ -1,5 +1,5 @@
 # Changelog
 
-## 0.7.9
-* added a changelog file
-* fixed an issue with the addon's url pointing to no where
+## 0.7.33
+* changed addon to use websocket API
+* updates will now happen through device_tracker.see service call
