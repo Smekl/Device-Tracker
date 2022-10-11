@@ -46,17 +46,28 @@ class Tracker(object):
             self.cache[mac] = time.time()
 
     def should_track_mac(self, mac):
+        return self.get_entity_by_mac(mac) is not None
+
+    def get_entity_by_mac(self, mac):
         for entity in self.entities:
             if entity['mac'] == mac:
-                return True
-
-        return False
+                return entity
 
     def notify(self, mac):
         logging.info(f"Notifying {mac}")
         if self.should_track_mac(mac):
+            entity = self.get_entity_by_mac(mac)['entity']
+            entity = entity.split('.')[1]
+
+            # since we do not have absence detection, do this to trigger state change
+            self.see(entity, mac, "not_home")
+            self.see(entity, mac, "home")
+
+    def see(self, entity, mac, location):
             asyncio.get_event_loop().run_until_complete(self.ws.call_service('device_tracker', 'see', service_data={
-                    "mac": mac
+                    "dev_id": entity,
+                    "mac": mac,
+                    "location_name": location
                 }))
 
 def load_config(config_path):
