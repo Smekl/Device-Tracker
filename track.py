@@ -9,6 +9,7 @@ import os
 
 import argparse
 import logging
+logging.getLogger().setLevel(logging.INFO)
 
 import urllib3
 urllib3.disable_warnings()
