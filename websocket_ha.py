@@ -5,7 +5,6 @@ import json
 import sys
 
 import logging
-logging.getLogger().setLevel(logging.DEBUG)
 
 class WebSocketHa(object):
 
@@ -71,7 +70,7 @@ class WebSocketHa(object):
 
 
 async def test():
-    ws = WebSocketHa('ws://haserver:8123/api/websocket')
+    ws = WebSocketHa('ws://url/api/websocket')
     await ws.connect()
     await ws.auth("")
     await ws.call_service('light', 'turn_on', target='light.living_room')

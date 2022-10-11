@@ -2,6 +2,7 @@
 
 from scapy.all import *
 import requests
+import asyncio
 import json
 import time
 import sys
@@ -21,6 +22,7 @@ class Tracker(object):
         self.config = config
         self.token = token
         self.entities = self.config['entities']
+        self.ws = WebSocketHa('ws://127.0.0.1:8123/api/websocket')
         logging.info(f"got entities {self.entities}")
 
         self.cache_timeout = self.config['timeout']
@@ -41,8 +43,19 @@ class Tracker(object):
             self.notify(pkt[Ether].src)
             self.cache[mac] = time.time()
 
+    def should_track_mac(self, mac):
+        for entity in self.entities:
+            if entity['mac'] == mac:
+                return True
+
+        return False
+
     def notify(self, mac):
         logging.info(f"Notifying {mac}")
+        if self.should_track_mac(mac):
+            asyncio.get_event_loop().run_until_complete(self.ws.call_service('device_tracker', 'see', service_data={
+                    "mac": mac
+                }))
 
 def load_config(config_path):
 
