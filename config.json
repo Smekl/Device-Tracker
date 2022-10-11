@@ -1,6 +1,6 @@
 {
     "name": "Device Tracker",
-    "version": "0.7.9",
+    "version": "0.7.10",
     "slug": "device_tracker",
     "description": "Track when devices connect to your network and get notifications",
     "url": "https://github.com/Smekl/Device-Tracker",
@@ -25,5 +25,6 @@
     },
     "host_network": true,
     "ingress": true,
+    "homeassistant_api": true,
     "map": ["ssl:ro"]
 }
