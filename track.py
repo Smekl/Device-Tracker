@@ -77,6 +77,10 @@ def get_args():
     if args.config is None:
         parser.error("Must specify path to config file")
 
+    if args.token is None:
+        logging.info(f'found token {os.environ['SUPERVISOR_TOKEN']}')
+        args.token = os.environ['SUPERVISOR_TOKEN']
+
     return args
 
 def main():
@@ -96,6 +100,4 @@ def main():
 
 
 if __name__ == '__main__':
-    import time
-    while True:
-        time.sleep(5)
+    main()
