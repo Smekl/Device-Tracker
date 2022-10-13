@@ -18,12 +18,12 @@ def ensure(func):
     """
     in case supervisor goes offline, we want to ensure that the connection retries reconnecting the supervisor.
     """
-    def wrapper(self, *args):
+    def wrapper(self, *args, **kwargs):
         max_retries = 30
         retry = 0
         while retry < max_retries:
             try:
-                return func(self, *args)
+                return func(self, *args, **kwargs)
             except:
                 retry += 1
                 self.__resetup_connection()
