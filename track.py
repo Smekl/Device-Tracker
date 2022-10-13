@@ -36,6 +36,7 @@ class Tracker(object):
         self.filter = 'or '.join([f'(ether src {entity["mac"]})' for entity in self.entities])
         now = time.time()
         self.cache = dict(map(lambda entity: (entity['mac'], now), self.entities))
+        self.missing = set(self.cache.keys())
         self.pkts = list()
         self.__lock = Lock()
         self.__event = Event()
@@ -56,6 +57,7 @@ class Tracker(object):
                 logging.info(f"entity {entity['name']} left home")
                 self.see(entity['entity'], entity['name'], mac, "not_home")
                 self.cache.pop(entity['mac'])
+                self.missing.add(mac)
 
     def track(self):
         logging.info("tracker started")
@@ -105,8 +107,9 @@ class Tracker(object):
         logging.info(pkt.summary())
         mac = pkt[Ether].src
         if self.should_track_mac(mac):
-            if mac not in self.cache:
+            if mac in self.missing:
                 self.notify(mac)
+                self.missing.remove(mac)
             self.cache[mac] = time.time()
 
     def should_track_mac(self, mac):
