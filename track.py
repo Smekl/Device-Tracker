@@ -66,22 +66,20 @@ class Tracker(object):
             self.see(entity, mac, "home")
 
     def see(self, entity, mac, location):
-        result = True
-        for i in range(5): # give it five tries
-            try:
-                result = self._loop.run_until_complete(self.ws.call_service('device_tracker', 'see', service_data={
-                        "dev_id": entity,
-                        "mac": mac,
-                        "location_name": location
-                    }))
+        try:
+            result = self._loop.run_until_complete(self.ws.call_service('device_tracker', 'see', service_data={
+                    "dev_id": entity,
+                    "mac": mac,
+                    "location_name": location
+                }))
 
-                if not result:
-                    logging.debug(f"device_tracker.see({entity}, {mac}, {location}) failed")
+            if not result:
+                logging.debug(f"device_tracker.see({entity}, {mac}, {location}) failed")
 
-                break
-            except:
-                import traceback
-                logging.error(traceback.format_exc())
+            break
+        except:
+            import traceback
+            logging.error(traceback.format_exc())
 
 def load_config(config_path):
 
