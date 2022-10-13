@@ -31,7 +31,7 @@ class Tracker(object):
 
     async def setup(self):
         logging.info("setting up websocket")
-        self.ws = WebSocketHa('ws://haserver:8123/api/websocket') #WebSocketHa('ws://supervisor/core/websocket')
+        self.ws = WebSocketHa('ws://supervisor/core/websocket')
         self._loop = asyncio.get_event_loop()
         await self.ws.connect()
         await self.ws.auth(self.token)
