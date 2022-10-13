@@ -15,12 +15,26 @@ class BadProtocol(Exception):
     pass
 
 class WebSocketHa(object):
+    """
+    this class is not thread safe
+    """
+
+    # arbitrary maximum value for ID.
+    # reset connection if we reach that number
+    ID_THRESHOLD = 65 * 1024
 
     def __init__(self, url):
         self.url = url
         self.ws = None
         self._id = 1
-        self._stop_keepalive = False
+        self._token = None
+
+    def __resetup_connection(self):
+        self._id = 1
+        self.close()
+        self.connect()
+        self.auth(self._token)
+
 
     def recv(self):
         data = self.ws.recv()
@@ -34,6 +48,11 @@ class WebSocketHa(object):
 
     def send(self, data: dict, with_id=True):
         if with_id:
+
+            if self._id >= WebSocketHa.ID_THRESHOLD:
+                logging.info(f"id reached threshold ({WebSocketHa.ID_THRESHOLD}). resetting.")
+                self.__resetup_connection()
+
             data['id'] = self._id
             self._id += 1
 
@@ -46,10 +65,10 @@ class WebSocketHa(object):
 
     def close(self):
         self.ws.close()
-        self._stop_keepalive = True
 
     def auth(self, token):
         logging.info("Authenticating")
+        self._token = token
         data = self.recv()
         if data['type'] != 'auth_required':
             raise BadProtocol('expected auth_required')
@@ -98,15 +117,6 @@ class WebSocketHa(object):
             return True
 
         return False
-
-    def keepalive(self):
-        while not self._stop_keepalive:
-            if not self.ping():
-                logging.error("connection timed out. need to reconnect.")
-            else:
-                logging.info("keepalive OK")
-
-            time.sleep(5)
 
 
 def test():
