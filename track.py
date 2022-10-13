@@ -105,7 +105,7 @@ class Tracker(object):
         logging.info(pkt.summary())
         mac = pkt[Ether].src
         if self.should_track_mac(mac):
-            if pkt.getlayer(UDP) and mac not in self.cache:
+            if mac not in self.cache:
                 self.notify(mac)
             self.cache[mac] = time.time()
 
