@@ -104,10 +104,10 @@ class Tracker(object):
         return mac not in self.cache or (time.time() - self.cache[mac]) >= self.cache_timeout
 
     def handle_packet(self, pkt):
-        logging.info(pkt.summary())
+        logging.debug(pkt.summary())
         if not pkt.getlayer(Ether):
             return
-            
+
         mac = pkt[Ether].src
         if self.should_track_mac(mac):
             if mac in self.missing:
