@@ -95,23 +95,25 @@ class Tracker(object):
     def notify(self, mac):
         logging.info(f"notifying {mac}")
         if self.should_track_mac(mac):
-            entity = self.get_entity_by_mac(mac)['entity']
-            entity = entity.split('.')[1]
+            entity = self.get_entity_by_mac(mac)
+            dev_id = entity['entity'].split('.')[1]
+            name = entity['name']
 
             # since we do not have absence detection, do this to trigger state change
-            self.see(entity, mac, "not_home")
-            self.see(entity, mac, "home")
+            self.see(dev_id, name, mac, "not_home")
+            self.see(dev_id, name, mac, "home")
 
-    def see(self, entity, mac, location):
+    def see(self, dev_id, name, mac, location):
         try:
             result = self.ws.call_service('device_tracker', 'see', service_data={
-                    "dev_id": entity,
+                    "dev_id": dev_id,
                     "mac": mac,
+                    "host_name": name,
                     "location_name": location
                 })
 
             if not result:
-                logging.debug(f"device_tracker.see({entity}, {mac}, {location}) failed")
+                logging.debug(f"device_tracker.see({dev_id}, {name}, {mac}, {location}) failed")
         except:
             import traceback
             logging.error(traceback.format_exc())
