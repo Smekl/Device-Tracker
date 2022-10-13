@@ -1,6 +1,7 @@
 #!/bin/python3
 
-from scapy.all import *
+from scapy.all import AsyncSniffer, Ether
+from threading import Lock, Event, Timer
 import concurrent.futures
 import requests
 import asyncio
@@ -14,7 +15,6 @@ import logging
 
 from websocket_ha import WebSocketHa
 
-
 class Tracker(object):
 
     MTU = 1500
@@ -25,25 +25,53 @@ class Tracker(object):
         self.entities = self.config['entities']
         logging.info(f"got entities {self.entities}")
 
+        logging.info("setting up websocket")
+        self.ws = WebSocketHa(config['url']) if config.get('url') else WebSocketHa('ws://supervisor/core/websocket')
+        self.ws.connect()
+        self.ws.auth(self.token)
+
         self.cache_timeout = self.config['timeout']
         self.filter = 'udp dst port 67 and udp[248:1] = 0x35 and udp[249:1] = 0x1 and udp[250:1] = 0x3' # DHCP Request
         self.cache = dict()
+        self.pkts = list()
+        self.__lock = Lock()
+        self.__event = Event()
+        self.sniffer = AsyncSniffer(filter=self.filter, prn=lambda x: self.__insert_packet(x), store=0)
 
-    async def setup(self):
-        logging.info("setting up websocket")
-        self.ws = WebSocketHa('ws://supervisor/core/websocket')
-        self._loop = asyncio.get_event_loop()
-        await self.ws.connect()
-        await self.ws.auth(self.token)
-        #with concurrent.futures.ProcessPoolExecutor() as pool:
-            #await self._loop.run_in_executor(pool, self.ws.keepalive)
+    def __insert_packet(self, pkt):
+        self.__lock.acquire()
+        self.pkts.append(pkt)
+        self.__lock.release()
+        self.__event.set()
 
     def track(self):
-        logging.info("Running sniffer")
-        self.sniffer = AsyncSniffer(filter=self.filter, prn=self.handle_packet)
+        logging.info("tracker started")
         self.sniffer.start()
+        last_keepalive = 0
+        interval = 5
+        while True:
 
-    def stop_track(self):
+            # keep connection alive every 5 seconds
+            cur_time = time.time()
+            delta = cur_time - last_keepalive
+            if delta > interval: 
+                self.ws.ping()
+                last_keepalive = cur_time
+                delta = 0
+
+            # check packets
+            if len(self.pkts) > 0:
+                self.__lock.acquire()
+                pkts = self.pkts.copy()
+                self.pkts.clear()
+                self.__lock.release()
+                for pkt in pkts:
+                    self.handle_packet(pkt)
+
+            Timer(interval - delta, lambda: self.__event.set()).start()
+            self.__event.wait()
+            self.__event.clear()
+
         self.sniffer.stop()
 
     def cache_invalid(self, mac):
@@ -65,7 +93,7 @@ class Tracker(object):
                 return entity
 
     def notify(self, mac):
-        logging.info(f"Notifying {mac}")
+        logging.info(f"notifying {mac}")
         if self.should_track_mac(mac):
             entity = self.get_entity_by_mac(mac)['entity']
             entity = entity.split('.')[1]
@@ -76,11 +104,11 @@ class Tracker(object):
 
     def see(self, entity, mac, location):
         try:
-            result = self._loop.run_until_complete(self.ws.call_service('device_tracker', 'see', service_data={
+            result = self.ws.call_service('device_tracker', 'see', service_data={
                     "dev_id": entity,
                     "mac": mac,
                     "location_name": location
-                }))
+                })
 
             if not result:
                 logging.debug(f"device_tracker.see({entity}, {mac}, {location}) failed")
@@ -118,7 +146,7 @@ def get_args():
 
     return args
 
-async def main():
+def main():
 
     # parse args
     args = get_args()
@@ -131,10 +159,8 @@ async def main():
 
     # run tracker
     tracker = Tracker(config, args.token)
-    await tracker.setup()
     tracker.track()
-    await tracker.ws.keepalive()
 
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    main()

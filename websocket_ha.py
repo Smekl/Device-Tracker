@@ -1,17 +1,17 @@
 
-import asyncio
-import asyncws
-import json
 import sys
-
+import time
+import json
 import logging
-
-from threading import Thread
+import websocket
 
 class WebSocketTimedOut(Exception):
     pass
 
 class AuthenticationFailed(Exception):
+    pass
+
+class BadProtocol(Exception):
     pass
 
 class WebSocketHa(object):
@@ -22,9 +22,9 @@ class WebSocketHa(object):
         self._id = 1
         self._stop_keepalive = False
 
-    async def recv(self):
-        data = await self.ws.recv()
-        if data is None:
+    def recv(self):
+        data = self.ws.recv()
+        if not data:
             logging.error("data is None")
             raise WebSocketTimedOut
 
@@ -32,39 +32,40 @@ class WebSocketHa(object):
         logging.debug(res)
         return res
 
-    async def send(self, data: dict, with_id=True):
+    def send(self, data: dict, with_id=True):
         if with_id:
             data['id'] = self._id
             self._id += 1
 
         logging.debug(data)
-        await self.ws.send(json.dumps(data))
+        self.ws.send(json.dumps(data))
 
-    async def connect(self):
+    def connect(self):
         logging.info("Connecting")
-        self.ws = await asyncws.connect(self.url)
+        self.ws = websocket.create_connection(self.url)
 
-    async def close(self):
-        await self.ws.close()
+    def close(self):
+        self.ws.close()
         self._stop_keepalive = True
 
-    async def auth(self, token):
+    def auth(self, token):
         logging.info("Authenticating")
-        data = await self.recv()
-        assert data['type'] == 'auth_required'
+        data = self.recv()
+        if data['type'] != 'auth_required':
+            raise BadProtocol('expected auth_required')
 
-        await self.send({
+        self.send({
                 'type': 'auth',
                 'access_token': token
             }, with_id=False)
 
-        data = await self.recv()
+        data = self.recv()
         if data['type'] != 'auth_ok':
             raise AuthenticationFailed
 
         return True
 
-    async def call_service(self, domain: str, service: str, service_data=None, target=None):
+    def call_service(self, domain: str, service: str, service_data=None, target=None):
         data = {
             'type': 'call_service',
             'domain': domain,
@@ -79,42 +80,42 @@ class WebSocketHa(object):
                 'entity_id': target
             }
 
-        await self.send(data)
+        self.send(data)
 
-        result = await self.recv()
-        assert result['id'] == data['id']
+        result = self.recv()
+        if result['id'] != data['id']:
+            raise BadProtocol(f'expected id: {data["id"]} but got id: {result["id"]}')
+
         return result['success']
 
-    async def ping(self):
-        await self.send({
+    def ping(self):
+        self.send({
                 'type': 'ping'
             })
 
-        resp = await self.recv()
+        resp = self.recv()
         if resp is not None and resp['type'] == 'pong':
             return True
 
         return False
 
-    async def keepalive(self):
+    def keepalive(self):
         while not self._stop_keepalive:
-            if not await self.ping():
+            if not self.ping():
                 logging.error("connection timed out. need to reconnect.")
             else:
                 logging.info("keepalive OK")
 
-            await asyncio.sleep(5)
+            time.sleep(5)
 
 
-async def test():
+def test():
     logging.getLogger().setLevel(logging.DEBUG)
     ws = WebSocketHa('ws://supervisor/core/websocket')
-    await ws.connect()
-    await ws.auth("")    
-    ws.keepalive_forever()
-    await asyncio.sleep(20)
+    ws.connect()
+    ws.auth("")    
+    ws.keepalive()
+    ws.close()
 
 if __name__ == '__main__':
-    if sys.platform == 'win32':
-        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-    asyncio.run(test())
+    test()
