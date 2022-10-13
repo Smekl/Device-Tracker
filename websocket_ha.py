@@ -6,6 +6,8 @@ import sys
 
 import logging
 
+from threading import Thread
+
 class WebSocketTimedOut(Exception):
     pass
 
@@ -39,10 +41,8 @@ class WebSocketHa(object):
         await self.ws.send(json.dumps(data))
 
     async def connect(self):
-        logging.info("Connecting..")
+        logging.info("Connecting")
         self.ws = await asyncws.connect(self.url)
-        logging.info("Connected")
-        logging.info("Setting up ping-ping to hold connection active")
 
     async def close(self):
         await self.ws.close()
@@ -97,7 +97,6 @@ class WebSocketHa(object):
         return False
 
     async def keepalive(self):
-        logging.info("keepalive task running")
         while not self._stop_keepalive:
             if not await self.ping():
                 logging.error("connection timed out. need to reconnect.")

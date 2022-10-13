@@ -1,6 +1,7 @@
 #!/bin/python3
 
 from scapy.all import *
+import concurrent.futures
 import requests
 import asyncio
 import json
@@ -22,19 +23,28 @@ class Tracker(object):
         self.config = config
         self.token = token
         self.entities = self.config['entities']
-        self.ws = WebSocketHa('ws://supervisor/core/websocket')
-        asyncio.get_event_loop().run_until_complete(self.ws.connect())
-        asyncio.get_event_loop().run_until_complete(self.ws.auth(token))
-        self.keepalive_task = asyncio.create_task(self.ws.keepalive())
         logging.info(f"got entities {self.entities}")
 
         self.cache_timeout = self.config['timeout']
         self.filter = 'udp dst port 67 and udp[248:1] = 0x35 and udp[249:1] = 0x1 and udp[250:1] = 0x3' # DHCP Request
         self.cache = dict()
 
+    async def setup(self):
+        logging.info("setting up websocket")
+        self.ws = WebSocketHa('ws://haserver:8123/api/websocket') #WebSocketHa('ws://supervisor/core/websocket')
+        self._loop = asyncio.get_event_loop()
+        await self.ws.connect()
+        await self.ws.auth(self.token)
+        #with concurrent.futures.ProcessPoolExecutor() as pool:
+            #await self._loop.run_in_executor(pool, self.ws.keepalive)
+
     def track(self):
-        logging.info("Running...")
-        sniff(filter=self.filter, prn=self.handle_packet)
+        logging.info("Running sniffer")
+        self.sniffer = AsyncSniffer(filter=self.filter, prn=self.handle_packet)
+        self.sniffer.start()
+
+    def stop_track(self):
+        self.sniffer.stop()
 
     def cache_invalid(self, mac):
         return mac not in self.cache or (time.time() - self.cache[mac]) >= self.cache_timeout
@@ -66,7 +76,7 @@ class Tracker(object):
 
     def see(self, entity, mac, location):
         try:
-            result = asyncio.get_event_loop().run_until_complete(self.ws.call_service('device_tracker', 'see', service_data={
+            result = self._loop.run_until_complete(self.ws.call_service('device_tracker', 'see', service_data={
                     "dev_id": entity,
                     "mac": mac,
                     "location_name": location
@@ -121,15 +131,10 @@ async def main():
 
     # run tracker
     tracker = Tracker(config, args.token)
+    await tracker.setup()
     tracker.track()
+    await tracker.ws.keepalive()
 
 
 if __name__ == '__main__':
-    try:
-        asyncio.run(main())
-    except:
-        import time
-        import traceback
-        logging.info(traceback.format_exc())
-        while True:
-            time.sleep(5)
+    asyncio.run(main())
