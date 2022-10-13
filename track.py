@@ -75,8 +75,6 @@ class Tracker(object):
 
             if not result:
                 logging.debug(f"device_tracker.see({entity}, {mac}, {location}) failed")
-
-            break
         except:
             import traceback
             logging.error(traceback.format_exc())
