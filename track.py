@@ -26,7 +26,7 @@ class Tracker(object):
         self._loop = asyncio.get_event_loop()
         self._loop.run_until_complete(self.ws.connect())
         self._loop.run_until_complete(self.ws.auth(token))
-        self.keepalive_task = self._loop.create_task(self.ws.keepalive())
+        self.keepalive_task = asyncio.create_task(self.ws.keepalive())
         logging.info(f"got entities {self.entities}")
 
         self.cache_timeout = self.config['timeout']
@@ -109,7 +109,7 @@ def get_args():
 
     return args
 
-def main():
+async def main():
 
     # parse args
     args = get_args()
@@ -127,7 +127,7 @@ def main():
 
 if __name__ == '__main__':
     try:
-        main()
+        asyncio.run(main())
     except:
         import time
         import traceback
