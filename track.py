@@ -77,15 +77,19 @@ def load_config(config_path):
     config_file.close()
     return config
 
-def setup_logging():
+def setup_logging(debug):
     logging.basicConfig(format='[%(asctime)s] - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
-    logging.getLogger().setLevel(logging.INFO)
+    if debug:
+        logging.getLogger().setLevel(logging.DBEUG)
+    else:
+        logging.getLogger().setLevel(logging.INFO)
 
 def get_args():
 
     parser = argparse.ArgumentParser(description='Track devices in the network')
     parser.add_argument('--config', dest='config', action='store', help='path to config file')
     parser.add_argument('--token', dest='token', action='store', help='token used to communicate with Home Assistant')
+    parser.add_argument('--debug', dest='debug', action='store_true', help='should we use debug logs', default=False)
 
     args = parser.parse_args()
 
@@ -99,11 +103,11 @@ def get_args():
 
 def main():
 
-    # set logging level
-    setup_logging()
-
     # parse args
     args = get_args()
+
+    # set logging level
+    setup_logging(args.debug)    
 
     # parse config
     config = load_config(args.config)
