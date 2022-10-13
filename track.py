@@ -25,7 +25,7 @@ class Tracker(object):
         self.ws = WebSocketHa('ws://supervisor/core/websocket')
         self._loop = asyncio.get_event_loop()
         self._loop.run_until_complete(self.ws.connect())
-        self._loop.get_event_loop().run_until_complete(self.ws.auth(token))
+        self._loop.run_until_complete(self.ws.auth(token))
         self.keepalive_task = self._loop.create_task(self.ws.keepalive())
         logging.info(f"got entities {self.entities}")
 
