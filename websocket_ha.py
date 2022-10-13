@@ -29,13 +29,31 @@ class WebSocketHa(object):
         self._id = 1
         self._token = None
 
+    @classmethod
+    def ensure(self, func):
+        """
+        in case supervisor goes offline, we want to ensure that the connection retries reconnecting the supervisor.
+        """
+        def wrapper(self, *args):
+            max_retries = 30
+            retry = 0
+            while retry < max_retries:
+                try:
+                    return func(self, *args)
+                except:
+                    retry += 1
+                    self.__resetup_connection()
+                    time.sleep(5)
+
+        return wrapper
+
     def __resetup_connection(self):
         self._id = 1
         self.close()
         self.connect()
         self.auth(self._token)
 
-
+    @WebSocketHa.ensure
     def recv(self):
         data = self.ws.recv()
         if not data:
@@ -46,6 +64,7 @@ class WebSocketHa(object):
         logging.debug(res)
         return res
 
+    @WebSocketHa.ensure
     def send(self, data: dict, with_id=True):
         if with_id:
 
