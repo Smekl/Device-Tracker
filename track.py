@@ -64,11 +64,22 @@ class Tracker(object):
             self.see(entity, mac, "home")
 
     def see(self, entity, mac, location):
-            asyncio.get_event_loop().run_until_complete(self.ws.call_service('device_tracker', 'see', service_data={
-                    "dev_id": entity,
-                    "mac": mac,
-                    "location_name": location
-                }))
+        result = True
+        for i in range(5): # give it five tries
+            try:
+                result = asyncio.get_event_loop().run_until_complete(self.ws.call_service('device_tracker', 'see', service_data={
+                        "dev_id": entity,
+                        "mac": mac,
+                        "location_name": location
+                    }))
+
+                if not result:
+                    logging.debug(f"device_tracker.see({entity}, {mac}, {location}) failed")
+
+                break
+            except:
+                import traceback
+                logging.error(traceback.format_exc())
 
 def load_config(config_path):
 
