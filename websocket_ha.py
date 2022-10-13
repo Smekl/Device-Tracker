@@ -6,20 +6,35 @@ import sys
 
 import logging
 
+class WebSocketTimedOut(Exception):
+    pass
+
+class AuthenticationFailed(Exception):
+    pass
+
 class WebSocketHa(object):
 
     def __init__(self, url):
         self.url = url
         self.ws = None
         self._id = 1
+        self._stop_keepalive = False
 
     async def recv(self):
         data = await self.ws.recv()
+        if data is None:
+            logging.error("data is None")
+            raise WebSocketTimedOut
+
         res = json.loads(data)
         logging.debug(res)
         return res
 
-    async def send(self, data: dict):
+    async def send(self, data: dict, with_id=True):
+        if with_id:
+            data['id'] = self._id
+            self._id += 1
+
         logging.debug(data)
         await self.ws.send(json.dumps(data))
 
@@ -27,9 +42,11 @@ class WebSocketHa(object):
         logging.info("Connecting..")
         self.ws = await asyncws.connect(self.url)
         logging.info("Connected")
+        logging.info("Setting up ping-ping to hold connection active")
 
     async def close(self):
         await self.ws.close()
+        self._stop_keepalive = True
 
     async def auth(self, token):
         logging.info("Authenticating")
@@ -39,15 +56,16 @@ class WebSocketHa(object):
         await self.send({
                 'type': 'auth',
                 'access_token': token
-            })
+            }, with_id=False)
 
         data = await self.recv()
-        assert data['type'] == 'auth_ok'
+        if data['type'] != 'auth_ok':
+            raise AuthenticationFailed
+
         return True
 
     async def call_service(self, domain: str, service: str, service_data=None, target=None):
         data = {
-            'id': self._id,
             'type': 'call_service',
             'domain': domain,
             'service': service,
@@ -62,19 +80,42 @@ class WebSocketHa(object):
             }
 
         await self.send(data)
-        self._id += 1
 
         result = await self.recv()
         assert result['id'] == data['id']
         return result['success']
 
+    async def ping(self):
+        await self.send({
+                'type': 'ping'
+            })
+
+        resp = await self.recv()
+        if resp is not None and resp['type'] == 'pong':
+            return True
+
+        return False
+
+    async def keepalive(self):
+        while not self._stop_keepalive:
+            if not await self.ping():
+                logging.error("connection timed out. need to reconnect.")
+            else:
+                logging.info("keepalive OK")
+
+            await asyncio.sleep(5)
+
+    def keepalive_forever(self):
+        self._keepalive_task = asyncio.create_task(self.keepalive())
+
 
 async def test():
+    logging.getLogger().setLevel(logging.DEBUG)
     ws = WebSocketHa('ws://supervisor/core/websocket')
     await ws.connect()
-    await ws.auth("")
-    await ws.call_service('light', 'turn_on', target='light.living_room')
-    await ws.close()
+    await ws.auth("")    
+    ws.keepalive_forever()
+    await asyncio.sleep(20)
 
 if __name__ == '__main__':
     if sys.platform == 'win32':
