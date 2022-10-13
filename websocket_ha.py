@@ -105,9 +105,6 @@ class WebSocketHa(object):
 
             await asyncio.sleep(5)
 
-    def keepalive_forever(self):
-        self._keepalive_task = asyncio.create_task(self.keepalive())
-
 
 async def test():
     logging.getLogger().setLevel(logging.DEBUG)

@@ -23,9 +23,10 @@ class Tracker(object):
         self.token = token
         self.entities = self.config['entities']
         self.ws = WebSocketHa('ws://supervisor/core/websocket')
-        asyncio.get_event_loop().run_until_complete(self.ws.connect())
-        asyncio.get_event_loop().run_until_complete(self.ws.auth(token))
-        self.ws.keepalive_forever()
+        self._loop = async.get_event_loop()
+        self._loop.run_until_complete(self.ws.connect())
+        self._loop.get_event_loop().run_until_complete(self.ws.auth(token))
+        self.keepalive_task = self._loop.create_task(self.ws.keepalive())
         logging.info(f"got entities {self.entities}")
 
         self.cache_timeout = self.config['timeout']
@@ -68,7 +69,7 @@ class Tracker(object):
         result = True
         for i in range(5): # give it five tries
             try:
-                result = asyncio.get_event_loop().run_until_complete(self.ws.call_service('device_tracker', 'see', service_data={
+                result = self._loop.run_until_complete(self.ws.call_service('device_tracker', 'see', service_data={
                         "dev_id": entity,
                         "mac": mac,
                         "location_name": location
