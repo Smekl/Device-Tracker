@@ -6,3 +6,7 @@
 
 ## 0.8.0
 * fixed bugs to make Home Assistant trigger presence events
+
+## 0.9
+* added absence detection
+* use absence_timeout in the config to configure the timeout for entities to change from 'home' to 'not_home'
