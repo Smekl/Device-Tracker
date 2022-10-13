@@ -80,7 +80,7 @@ def load_config(config_path):
 def setup_logging(debug):
     logging.basicConfig(format='[%(asctime)s] - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
     if debug:
-        logging.getLogger().setLevel(logging.DBEUG)
+        logging.getLogger().setLevel(logging.DEBUG)
     else:
         logging.getLogger().setLevel(logging.INFO)
 
