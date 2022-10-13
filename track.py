@@ -32,8 +32,8 @@ class Tracker(object):
         self.ws.auth(self.token)
 
         self.cache_timeout = self.config['timeout']
-        self.filter = '(udp dst port 67 and udp[248:1] = 0x35 and udp[249:1] = 0x1 and udp[250:1] = 0x3) ' # DHCP Request
-        self.filter += ' '.join([f'or (arp and ether src {entity["mac"]})' for entity in self.entities])
+        #self.filter = '(udp dst port 67 and udp[248:1] = 0x35 and udp[249:1] = 0x1 and udp[250:1] = 0x3) ' # DHCP Request
+        self.filter = ' '.join([f'or (ether src {entity["mac"]})' for entity in self.entities])
         now = time.time()
         self.cache = dict(map(lambda entity: (entity['mac'], now), self.entities))
         self.pkts = list()
