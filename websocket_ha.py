@@ -97,6 +97,7 @@ class WebSocketHa(object):
         return False
 
     async def keepalive(self):
+        logging.info("keepalive task running")
         while not self._stop_keepalive:
             if not await self.ping():
                 logging.error("connection timed out. need to reconnect.")
