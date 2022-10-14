@@ -40,11 +40,11 @@ class WebSocketHa(object):
     # reset connection if we reach that number
     ID_THRESHOLD = 65 * 1024
 
-    def __init__(self, url):
+    def __init__(self, url, token):
         self.url = url
         self.ws = None
         self._id = 1
-        self._token = None
+        self._token = token
 
     def __resetup_connection(self):
         self._id = 1
@@ -52,7 +52,11 @@ class WebSocketHa(object):
         self.connect()
         self.auth(self._token)
 
-    @ensure
+    def reinit(self):
+        self._id = 1
+        self.connect()
+        self.auth(self._token)
+
     def recv(self):
         data = self.ws.recv()
         if not data:
@@ -63,7 +67,6 @@ class WebSocketHa(object):
         logging.debug(res)
         return res
 
-    @ensure
     def send(self, data: dict, with_id=True):
         if with_id:
 
@@ -78,14 +81,14 @@ class WebSocketHa(object):
         self.ws.send(json.dumps(data))
 
     def connect(self):
-        logging.info("Connecting")
+        logging.debug("Connecting")
         self.ws = websocket.create_connection(self.url)
 
     def close(self):
         self.ws.close()
 
     def auth(self, token):
-        logging.info("Authenticating")
+        logging.debug("Authenticating")
         self._token = token
         data = self.recv()
         if data['type'] != 'auth_required':

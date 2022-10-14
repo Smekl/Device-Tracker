@@ -27,10 +27,7 @@ class Tracker(object):
         self.absence_timeout = self.config['absence_timeout']
 
         logging.info("setting up websocket")
-        self.ws = WebSocketHa(config['url']) if config.get('url') else WebSocketHa('ws://supervisor/core/websocket')
-        self.ws.connect()
-        self.ws.auth(self.token)
-
+        self.ws = WebSocketHa(config['url'], self.token) if config.get('url') else WebSocketHa('ws://supervisor/core/websocket', self.token)
         self.cache_timeout = self.config['timeout']
         #self.filter = '(udp dst port 67 and udp[248:1] = 0x35 and udp[249:1] = 0x1 and udp[250:1] = 0x3) ' # DHCP Request
         self.filter = ' or'.join([f'(ether src {entity["mac"]})' for entity in self.entities])
@@ -70,8 +67,10 @@ class Tracker(object):
             # check absence of tracked devices every 5 seconds
             cur_time = time.time()
             delta = cur_time - last_keepalive
-            if delta > interval: 
-                self.ws.ping()
+            if delta > interval:
+                # do not use ping anymore. just open a new socket when we need.
+                # there isn't really a case where we have to keep connection open.
+                #self.ws.ping()
                 self.check_absence()
                 last_keepalive = cur_time
                 delta = 0
@@ -132,13 +131,14 @@ class Tracker(object):
 
     def see(self, dev_id, name, mac, location):
         try:
+            self.ws.reinit()
             result = self.ws.call_service('device_tracker', 'see', service_data={
                     "dev_id": dev_id,
                     "mac": mac,
                     "host_name": name,
                     "location_name": location
                 })
-
+            self.ws.close()
             if not result:
                 logging.debug(f"device_tracker.see({dev_id}, {name}, {mac}, {location}) failed")
         except:
