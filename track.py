@@ -51,7 +51,7 @@ class Tracker(object):
         for entity in self.entities:
             mac = entity['mac']
             if mac in self.cache and now - self.cache[mac] > self.absence_timeout:
-                logging.info(f"entity {entity['name']} left home")
+                logging.info(f"device {entity['name']} left home")
                 self.see(entity['entity'], entity['name'], mac, "not_home")
                 self.cache.pop(entity['mac'])
                 self.missing.add(mac)
@@ -123,7 +123,6 @@ class Tracker(object):
                 return entity
 
     def notify(self, mac):
-        logging.info(f"notifying {mac}")
         entity = self.get_entity_by_mac(mac)
         dev_id = entity['entity'].split('.')[1]
         name = entity['name']
@@ -131,6 +130,7 @@ class Tracker(object):
 
     def see(self, dev_id, name, mac, location):
         try:
+            logging.info(f"device {name} came home")
             self.ws.reinit()
             result = self.ws.call_service('device_tracker', 'see', service_data={
                     "dev_id": dev_id,
