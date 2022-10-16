@@ -1,19 +1,22 @@
 #!/bin/python3
 
 from scapy.all import AsyncSniffer, Ether, UDP
-from threading import Lock, Event, Timer
+from threading import Lock, Event, Timer, Thread
 import concurrent.futures
 import requests
 import asyncio
 import json
 import time
 import sys
+import re
 import os
 
 import argparse
 import logging
 
 from websocket_ha import WebSocketHa
+from paramiko.client import SSHClient
+from paramiko import AutoAddPolicy
 
 class Tracker(object):
 
@@ -40,6 +43,15 @@ class Tracker(object):
         logging.debug(f"using filter -> {self.filter}")
         self.sniffer = AsyncSniffer(filter=self.filter, prn=lambda x: self.__insert_packet(x), store=0)
 
+        if config['asus']:
+            logging.info("initializing asus tracker")
+            self.__init_ssh_client()
+
+    def __init_ssh_client(self):
+        self.ssh = SSHClient()
+        self.ssh.set_missing_host_key_policy(AutoAddPolicy())
+        self.ssh.connect(self.config['ip'], username=self.config['user'], key_filename=self.config['key'])
+
     def __insert_packet(self, pkt):
         self.__lock.acquire()
         self.pkts.append(pkt)
@@ -52,12 +64,41 @@ class Tracker(object):
             mac = entity['mac']
             if mac in self.cache and now - self.cache[mac] > self.absence_timeout:
                 logging.info(f"device {entity['name']} left home")
-                self.see(entity['entity'], entity['name'], mac, "not_home")
+                self.notify(mac, 'not_home')
                 self.cache.pop(entity['mac'])
                 self.missing.add(mac)
 
     def track(self):
-        logging.info("tracker started")
+        if config['asus']:
+            self.asus_tracker()
+
+        else:
+            self.sniffer_tracker()
+
+    def asus_tracker(self):
+        logging.info("asus tracker started")
+        stdin, stdout, stderr = self.ssh.exec_command("tail -f /tmp/syslog.log")
+        pattern = 'STA ([0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}).*: (.*)'
+        while True:
+            line = stdout.readline()
+            if 'hostapd' not in line:
+                continue
+
+            matches = re.findall(pattern, line)
+            if len(matches) > 1:
+                continue
+
+            mac, status = matches[0]
+            if status not in ['disassociated', 'associated']:
+                continue
+
+            location = 'home' if status == 'associated' else 'not_home'
+            self.notify(mac, location)
+
+        self.ssh.close()
+
+    def sniffer_tracker(self):
+        logging.info("sniffer tracker started")
         self.sniffer.start()
         last_keepalive = 0
         interval = 5
@@ -110,7 +151,7 @@ class Tracker(object):
         mac = pkt[Ether].src
         if self.should_track_mac(mac):
             if mac in self.missing:
-                self.notify(mac)
+                self.notify(mac, 'home')
                 self.missing.remove(mac)
             self.cache[mac] = time.time()
 
@@ -122,15 +163,15 @@ class Tracker(object):
             if entity['mac'] == mac:
                 return entity
 
-    def notify(self, mac):
+    def notify(self, mac, location):
         entity = self.get_entity_by_mac(mac)
         dev_id = entity['entity'].split('.')[1]
         name = entity['name']
-        self.see(dev_id, name, mac, "home")
+        self.see(dev_id, name, mac, location)
 
     def see(self, dev_id, name, mac, location):
         try:
-            logging.info(f"device {name} came home")
+            logging.info(f"device {name} is {location}")
             self.ws.reinit()
             result = self.ws.call_service('device_tracker', 'see', service_data={
                     "dev_id": dev_id,
