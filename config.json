@@ -1,6 +1,6 @@
 {
     "name": "Device Tracker",
-    "version": "0.9.12",
+    "version": "0.9.13",
     "slug": "device_tracker",
     "description": "Track when devices connect to your network and get notifications",
     "url": "https://github.com/Smekl/Device-Tracker",

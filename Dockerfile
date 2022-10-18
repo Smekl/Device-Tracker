@@ -12,7 +12,7 @@ WORKDIR /device_tracker
 
 COPY . .
 RUN apk add libpcap
-RUN pip install scapy requests websocket-client
+RUN pip install scapy requests websocket-client openssh-client
 RUN chmod +x hotfixes/scapy.sh && ./hotfixes/scapy.sh
 RUN chmod +x ./run.sh
 CMD [ "./run.sh" ]
