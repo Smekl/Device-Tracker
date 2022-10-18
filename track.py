@@ -2,9 +2,11 @@
 
 from scapy.all import AsyncSniffer, Ether, UDP
 from threading import Lock, Event, Timer, Thread
+from datetime import datetime
 import concurrent.futures
 import requests
 import asyncio
+import select
 import json
 import time
 import sys
@@ -14,9 +16,8 @@ import os
 import argparse
 import logging
 
+from ssh import SSHClient
 from websocket_ha import WebSocketHa
-from paramiko.client import SSHClient
-from paramiko import AutoAddPolicy
 
 class Tracker(object):
 
@@ -45,12 +46,10 @@ class Tracker(object):
 
         if config['asus']:
             logging.info("initializing asus tracker")
-            self.__init_ssh_client()
-
-    def __init_ssh_client(self):
-        self.ssh = SSHClient()
-        self.ssh.set_missing_host_key_policy(AutoAddPolicy())
-        self.ssh.connect(self.config['ip'], username=self.config['user'], key_filename=self.config['key'])
+            self.ssh_clients = list()
+            self.ssh_clients.append(SSHClient(self.config['ip'], self.config['user'], self.config['key']))
+            for node in self.config['nodes']:
+                self.ssh_clients.append(SSHClient(node['ip'], self.config['user'], self.config['key']))
 
     def __insert_packet(self, pkt):
         self.__lock.acquire()
@@ -69,7 +68,7 @@ class Tracker(object):
                 self.missing.add(mac)
 
     def track(self):
-        if config['asus']:
+        if self.config['asus']:
             self.asus_tracker()
 
         else:
@@ -77,25 +76,74 @@ class Tracker(object):
 
     def asus_tracker(self):
         logging.info("asus tracker started")
-        stdin, stdout, stderr = self.ssh.exec_command("tail -f /tmp/syslog.log")
-        pattern = 'STA ([0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}).*: (.*)'
+        pattern = '(^\w{3} \d{1,2} \d{2}:\d{2}:\d{2}).*?STA ([0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}).*: (.*)'
+
+        # first run the command on all nodes
+        cmds = list()
+        for node in self.ssh_clients:
+            cmds.append(node.exec_command('tail -f -n 1 /tmp/syslog.log'))
+
+
+        waitlist = dict()
+        node_change_time = 0
+        if len(self.config['nodes']) > 0:
+            node_change_time = self.config['node_change_time']
+
         while True:
-            line = stdout.readline()
-            if 'hostapd' not in line:
-                continue
 
-            matches = re.findall(pattern, line)
-            if len(matches) > 1:
-                continue
+            # run select
+            cmds_to_read, _, _ = select.select(cmds, [], [], 1)
 
-            mac, status = matches[0]
-            if status not in ['disassociated', 'associated']:
-                continue
+            # iterate on cmds
+            for cmd in cmds_to_read:
 
-            location = 'home' if status == 'associated' else 'not_home'
-            self.notify(mac, location)
+                while cmd.size() > 0:
+                    line = cmd.readline().strip()
 
-        self.ssh.close()
+                    if 'hostapd' not in line:
+                        continue
+
+                    matches = re.findall(pattern, line)
+                    if len(matches) > 1:
+                        continue
+
+                    date, mac, status = matches[0]
+                    if not self.should_track_mac(mac):
+                        continue
+
+                    if status not in ['disassociated', 'associated']:
+                        continue
+
+                    logging.debug(f'{cmd.client.ip} -> {line}')
+
+                    location = 'home' if status == 'associated' else 'not_home'
+                    timestamp = datetime.strptime(f'{datetime.now().year} {date}', "%Y %b %d %H:%M:%S").timestamp()
+
+                    def is_duplicate(mac, location, timestamp):
+                        saved_location, _, saved_timestamp = waitlist[mac]
+                        return saved_location == location and saved_timestamp == timestamp
+
+                    if mac in waitlist and not is_duplicate(mac, location, timestamp):
+                        logging.info(f"{mac} changed node. ignoring event.")
+                        waitlist.pop(mac)
+                        continue
+
+                    waitlist[mac] = (location, time.time(), timestamp)
+
+
+            # clear waitlist
+            # if more than @node_change_time had passed, notify node location
+            now = time.time()
+            for mac, value in waitlist.copy().items():
+                location, timestamp, log_timestamp = value
+                if now - timestamp > node_change_time:
+                    logging.debug(f"{mac} is {location}")
+                    self.notify(mac, location)
+                    waitlist.pop(mac)
+
+        # close all commands
+        for cmd in cmds:
+            cmd.close()
 
     def sniffer_tracker(self):
         logging.info("sniffer tracker started")

@@ -1,6 +1,6 @@
 {
     "name": "Device Tracker",
-    "version": "0.9.9",
+    "version": "0.9.12",
     "slug": "device_tracker",
     "description": "Track when devices connect to your network and get notifications",
     "url": "https://github.com/Smekl/Device-Tracker",
@@ -16,6 +16,8 @@
         "timeout": 5,
         "absence_timeout": 180,
         "asus": false,
+        "nodes": [],
+        "node_change_time": 3,
         "ip": "192.168.50.1",
         "user": "admin",
         "key": "/ssl/asus/id_rsa",
@@ -33,6 +35,12 @@
         "absence_timeout": "int",
         "asus": "bool",
         "ip": "str",
+        "nodes": [
+            {
+                "ip": "str"
+            }
+        ],
+        "node_change_time": "int",
         "user": "str",
         "key": "str",
         "debug": "bool"
