@@ -119,6 +119,8 @@ class Tracker(object):
                     location = 'home' if status == 'associated' else 'not_home'
                     timestamp = datetime.strptime(f'{datetime.now().year} {date}', "%Y %b %d %H:%M:%S").timestamp()
 
+                    self.notify(mac, location)
+
                     def is_duplicate(mac, location, timestamp):
                         saved_location, _, saved_timestamp = waitlist[mac]
                         return saved_location == location and saved_timestamp == timestamp
@@ -138,7 +140,7 @@ class Tracker(object):
                 location, timestamp, log_timestamp = value
                 if now - timestamp > node_change_time:
                     logging.debug(f"{mac} is {location}")
-                    self.notify(mac, location)
+                    #self.notify(mac, location)
                     waitlist.pop(mac)
 
         # close all commands
