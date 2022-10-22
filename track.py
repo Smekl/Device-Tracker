@@ -34,7 +34,7 @@ class Tracker(object):
         self.ws = WebSocketHa(config['url'], self.token) if config.get('url') else WebSocketHa('ws://supervisor/core/websocket', self.token)
         self.cache_timeout = self.config['timeout']
         #self.filter = '(udp dst port 67 and udp[248:1] = 0x35 and udp[249:1] = 0x1 and udp[250:1] = 0x3) ' # DHCP Request
-        self.filter = ' or'.join([f'(ether src {entity["mac"]})' for entity in self.entities])
+        self.filter = ' or '.join([f'(ether src {entity["mac"]})' for entity in self.entities])
         now = time.time()
         self.cache = dict(map(lambda entity: (entity['mac'], now), self.entities))
         self.missing = set(self.cache.keys())
