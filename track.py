@@ -28,11 +28,9 @@ class Tracker(object):
         self.token = token
         self.entities = self.config['entities']
         logging.info(f"got entities {self.entities}")
-        self.absence_timeout = self.config['absence_timeout']
 
         logging.info("setting up websocket")
         self.ws = WebSocketHa(config['url'], self.token) if config.get('url') else WebSocketHa('ws://supervisor/core/websocket', self.token)
-        self.cache_timeout = self.config['timeout']
         #self.filter = '(udp dst port 67 and udp[248:1] = 0x35 and udp[249:1] = 0x1 and udp[250:1] = 0x3) ' # DHCP Request
         self.filter = ' or '.join([f'(ether src {entity["mac"]})' for entity in self.entities])
         now = time.time()
@@ -61,7 +59,8 @@ class Tracker(object):
         now = time.time()
         for entity in self.entities:
             mac = entity['mac']
-            if mac in self.cache and now - self.cache[mac] > self.absence_timeout:
+            timeout = entity['timeout']
+            if mac in self.cache and now - self.cache[mac] > timeout:
                 logging.info(f"device {entity['name']} left home")
                 self.notify(mac, 'not_home')
                 self.cache.pop(entity['mac'])
@@ -187,9 +186,6 @@ class Tracker(object):
             self.__event.clear()
 
         self.sniffer.stop()
-
-    def cache_invalid(self, mac):
-        return mac not in self.cache or (time.time() - self.cache[mac]) >= self.cache_timeout
 
     def handle_packet(self, pkt):
         logging.debug(pkt.summary())

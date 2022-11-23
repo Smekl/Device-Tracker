@@ -1,6 +1,6 @@
 {
     "name": "Device Tracker",
-    "version": "0.9.16",
+    "version": "0.9.17",
     "slug": "device_tracker",
     "description": "Track when devices connect to your network and get notifications",
     "url": "https://github.com/Smekl/Device-Tracker",
@@ -11,10 +11,9 @@
         "entities": [{
             "entity": "device_tracker.placeholder",
             "name": "Friendly Name",
-            "mac": "aa:bb:cc:11:22:33"
+            "mac": "aa:bb:cc:11:22:33",
+            "timeout": 180
         }],
-        "timeout": 5,
-        "absence_timeout": 180,
         "asus": false,
         "nodes": [],
         "node_change_time": 3,
@@ -28,11 +27,10 @@
             {
                 "entity": "str",
                 "name": "str",
-                "mac": "str"
+                "mac": "str",
+                "timeout": "int"
             }
         ],
-        "timeout": "int",
-        "absence_timeout": "int",
         "asus": "bool",
         "ip": "str",
         "nodes": [
